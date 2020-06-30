@@ -19,12 +19,11 @@ package com.google.samples.propertyanimation
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
-
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -76,19 +75,16 @@ class MainActivity : AppCompatActivity() {
     private fun rotater() {
         ObjectAnimator.ofFloat(star, View.ROTATION, -360f, 0f).apply {
             duration = 1000
-            addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationStart(animation: Animator?) {
-                    rotateButton.isEnabled = false
-                }
-
-                override fun onAnimationEnd(animation: Animator?) {
-                    rotateButton.isEnabled = true
-                }
-            })
+            disableViewDuringAnimation(rotateButton)
         }.start()
     }
 
     private fun translater() {
+        ObjectAnimator.ofFloat(star, View.TRANSLATION_X, 200f).apply {
+            repeatCount = 1
+            repeatMode = ObjectAnimator.REVERSE
+            disableViewDuringAnimation(translateButton)
+        }.start()
     }
 
     private fun scaler() {
@@ -103,4 +99,15 @@ class MainActivity : AppCompatActivity() {
     private fun shower() {
     }
 
+    private fun ObjectAnimator.disableViewDuringAnimation(view: View) {
+        addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationStart(animation: Animator?) {
+                view.isEnabled = false
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                view.isEnabled = true
+            }
+        })
+    }
 }
