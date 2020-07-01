@@ -18,14 +18,20 @@ package com.google.samples.propertyanimation
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.view.ViewGroup
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.LinearInterpolator
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatImageView
 
 class MainActivity : AppCompatActivity() {
 
@@ -117,6 +123,72 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun shower() {
+        val container = star.parent as ViewGroup
+        val newStar = createNewStar(container)
+        container.addView(newStar)
+
+        //setup animation
+        // animateUsingPropertyValues(newStar, container)
+        animateUsingAnimatorSet(newStar, container)
+    }
+
+    private fun createNewStar(container: ViewGroup): View {
+        return AppCompatImageView(this).apply {
+            setImageResource(R.drawable.ic_star)
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+            // setup size
+            scaleX = Math.random().toFloat() * 1.5f + 0.1f
+            scaleY = scaleX
+            // setup x position
+            val starWidth = star.width.toFloat() * scaleX
+            val containerWidth = container.width.toFloat()
+            translationX = Math.random().toFloat() * containerWidth - starWidth
+        }
+    }
+
+    private fun animateUsingPropertyValues(newStar: View, container: ViewGroup) {
+        val starHeight = star.height.toFloat() * newStar.scaleY
+        val containerHeight = container.height.toFloat()
+
+        val mover = PropertyValuesHolder.ofFloat(
+            View.TRANSLATION_Y, -starHeight, containerHeight + starHeight
+        )
+        val rotator = PropertyValuesHolder.ofFloat(View.ROTATION, -360F, 0F)
+
+        ObjectAnimator.ofPropertyValuesHolder(newStar, mover, rotator).apply {
+            duration = (Math.random() * 1500 + 500).toLong()
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator?) {
+                    container.removeView(newStar)
+                }
+            })
+        }.start()
+    }
+
+    private fun animateUsingAnimatorSet(newStar: View, container: ViewGroup) {
+        val starHeight = star.height.toFloat() * newStar.scaleY
+        val containerHeight = container.height.toFloat()
+
+        val mover = ObjectAnimator.ofFloat(
+            newStar, View.TRANSLATION_Y, -starHeight, containerHeight + starHeight
+        ).apply { interpolator = AccelerateInterpolator(1f) }
+        val rotator = ObjectAnimator.ofFloat(
+            newStar, View.ROTATION, Math.random().toFloat() * 1080
+        ).apply { interpolator = LinearInterpolator() }
+
+        val set = AnimatorSet().apply {
+            playTogether(mover, rotator)
+            duration = (Math.random() * 1500 + 500).toLong()
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator?) {
+                    container.removeView(newStar)
+                }
+            })
+        }
+        set.start()
     }
 
     private fun ObjectAnimator.disableViewDuringAnimation(view: View) {
